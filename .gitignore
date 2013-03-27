@@ -1,0 +1,6 @@
+.ensime
+*class
+target
+.ensime_lucene
+*.db
+*.log
