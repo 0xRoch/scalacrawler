@@ -8,32 +8,36 @@ import java.util.concurrent.{ Future => JFuture }
 import com.ning.http.client._
 import java.net.URL
 
-trait Crawler[CrawlResponse] extends HttpReader {
+trait Crawler[CrawlResponse] {
+
+  import HttpReader._
+
+  type CrawlResult = (URL, CrawlResponse)
 
   implicit def actorSystem: ActorSystem
 
-  val a: Reader[AsyncHttpClient, Int] = pure(3)
+  def httpClient: AsyncHttpClient
 
-
-  //  def httpClient: AsyncHttpClient
-
-  //  def fetchUrls(urls: Seq[URL]): Future[Seq[CrawlResult]]
-  //  def fetchUrl(url: URL): JFuture[CrawlResult]
-  // def collectFuture[A](future: JFuture[A], collector: Actor Ref)
+  def fetchUrls(urls: Seq[URL]): Future[Seq[Http[CrawlResult]]]
+  def fetchUrl(url: URL): JFuture[Http[CrawlResult]]
+  def collectFuture[A](future: JFuture[A], collector: ActorRef)
 
 }
 
 
-trait HttpReader extends ReaderI[AsyncHttpClient] {
-  def Http = reader _
+object HttpReader extends ReaderI[AsyncHttpClient] {
   type Http[A] = SpecificReader[A]
+  def Http[A]: (AsyncHttpClient => A)=> Http[A] = reader _
 }
 
 trait ReaderI[R]  {
   type SpecificReader[A] = Reader[R, A]
-  implicit def reader[R, A](f: R => A) = Reader(f)
 
-  def pure[R,A](a: A): Reader[R, A] = (r: R) => a
+  implicit def reader[A](f: R => A): SpecificReader[A] =
+    Reader(f)
+
+  def pure[A](a: A): SpecificReader[A] =
+    (r:R) => a
 }
 
 case class Reader[R, A](f: R => A) {
