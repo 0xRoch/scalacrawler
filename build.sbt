@@ -3,10 +3,13 @@ resolvers ++= Seq(
   "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 )
 
-scalaVersion := "2.9.1"
+scalaVersion := "2.10.0"
+
+scalacOptions ++= Seq("-deprecation", "-feature")
 
 libraryDependencies ++= Seq(
-  "io.spray" % "spray-client" % "1.0-M7",
-  "com.yammer.metrics" %% "metrics-scala" % "2.2.0",
-  "com.typesafe.akka" % "akka-actor" % "2.0.5"
+  "com.yammer.metrics" % "metrics-core" % "2.2.0",
+  "com.typesafe.akka" %% "akka-actor" % "2.1.2",
+  "com.ning" % "async-http-client" % "1.7.12",
+  "org.scalaz" %% "scalaz-core" % "6.0.4"
 )
