@@ -12,14 +12,6 @@ trait Crawler {
 
   import HttpReader._
 
-  def fetchUrls(buildHandler: URL => AsyncHandler[Response])(urls: Seq[URL]): Http[Unit] = {
-    Http( cli => {
-      urls foreach { x =>
-        invoke(simpleGet(x), buildHandler(x))
-      }
-    })
-  }
-
   def invoke(request: Request, callback: AsyncHandler[Response]): Http[Unit] =
     Http( _.executeRequest(request, callback) )
 

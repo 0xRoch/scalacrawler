@@ -4,52 +4,39 @@ import akka.actor._
 import com.ning.http.client._
 import java.net.URL
 
-trait AkkaCrawler extends Crawler {
+trait AkkaCrawler { this: Crawler =>
 
   def httpClient: AsyncHttpClient
   def as: ActorSystem
 
-  def processUrlList(urls: List[URL], callbackActor: ActorRef)  {
-    fetchUrls((x: URL) => new AkkaCallback(callbackActor, x))(urls)
+  def processUrls(urls: Iterable[URL], callbackActor: ActorRef) = {
+    urls foreach { url =>
+      invoke(simpleGet(url), new AkkaCrawlerCallback(callbackActor, url))
+    }
   }
 
 
-  class AkkaCallback(val callback: ActorRef, val url: URL) extends AsyncCompletionHandler[Response] {
+  class AkkaCrawlerCallback(val callback: ActorRef, val url: URL)
+      extends AsyncCompletionHandler[Response] {
+
     override def onCompleted(response: Response) = {
-      callback ! response
+      callback ! (url, response)
       response
     }
 
     override def onThrowable(t: Throwable) {
-      callback ! t
+      callback ! (url, t)
     }
   }
 
 
+}
 
-  object SprayCrawlingHandlerActorProtocol {
-    case class Process(urls: List[String], responder: ActorRef)
+class SprayCrawlingHandlerActor(val responder: ActorRef, var urls: Set[URL] )
+    extends Actor  {
+
+  def receive = {
+    case (url: URL, t: Throwable) => ???
+    case (url: URL, resp: Response) => ???
   }
-
-  class SprayCrawlingHandlerActor extends Actor {
-    import SprayCrawlingHandlerActorProtocol._
-    var state: (Set[URL], ActorRef) = _
-
-    def awaitDataToProcess: Receive = {
-      case Process(urlStrings, responder) => {
-        val urls = urlStrings.map(new URL(_)).toSet
-        state = (urls, responder)
-      }
-    }
-
-    def awaitCrawlingUpdates: Receive = {
-      case x => ???
-    }
-
-    def receive = awaitDataToProcess
-
-  }
-
-
-
 }
