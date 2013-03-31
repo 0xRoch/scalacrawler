@@ -4,3 +4,4 @@ target
 .ensime_lucene
 *.db
 *.log
+*.jar
