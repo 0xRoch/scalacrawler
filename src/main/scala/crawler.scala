@@ -1,4 +1,4 @@
-package crawler
+package scalacrawler
 
 import scala.language.implicitConversions
 
@@ -8,19 +8,23 @@ import java.util.concurrent.{ Future => JFuture }
 import com.ning.http.client._
 import java.net.URL
 
-trait Crawler[CrawlResponse] {
+trait Crawler {
 
   import HttpReader._
 
-  type CrawlResult = (URL, CrawlResponse)
+  def fetchUrls(buildHandler: URL => AsyncHandler[Response])(urls: Seq[URL]): Http[Unit] = {
+    Http( cli => {
+      urls foreach { x =>
+        invoke(simpleGet(x), buildHandler(x))
+      }
+    })
+  }
 
-  implicit def actorSystem: ActorSystem
+  def invoke(request: Request, callback: AsyncHandler[Response]): Http[Unit] =
+    Http( _.executeRequest(request, callback) )
 
-  def httpClient: AsyncHttpClient
-
-  def fetchUrls(urls: Seq[URL]): Future[Seq[Http[CrawlResult]]]
-  def fetchUrl(url: URL): JFuture[Http[CrawlResult]]
-  def collectFuture[A](future: JFuture[A], collector: ActorRef)
+  def simpleGet(url: URL): Request =
+    new RequestBuilder().setUrl(url.toString).setFollowRedirects(true).build
 
 }
 
