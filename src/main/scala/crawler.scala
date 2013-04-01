@@ -21,7 +21,7 @@ trait AsyncCrawler {
 
 trait  AsyncHttpClientCrawler extends AsyncCrawler {
   type HttpRequest = Request
-  type Callback = AsyncHandler[Response]
+  type Callback = AsyncCompletionHandler[Response]
 
   def client: AsyncHttpClient
 

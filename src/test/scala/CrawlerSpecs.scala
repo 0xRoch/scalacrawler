@@ -23,7 +23,7 @@ class AsyncHttpClientCrawlerSpec extends WordSpec with MockitoSugar with ShouldM
 
     "should call execute on proper request with proper handler in invoke method" in {
       val request = mock[Request]
-      val handler = mock[AsyncHandler[Response]]
+      val handler = mock[AsyncCompletionHandler[Response]]
 
       crawler.invoke(request, handler)
       verify(crawler.client).executeRequest(request, handler)

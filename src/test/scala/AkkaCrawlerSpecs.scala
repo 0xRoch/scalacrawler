@@ -15,39 +15,34 @@ class AkkaCrawlerSpec extends TestKit(ActorSystem("testsystem"))
 
   trait AkkaCrawlerConfig {
     val as = system
-    def httpClient = ???
+    def client = ???
   }
 
-  trait MockCrawler extends AsyncCrawler {
-    var requests = Vector[(MockRequest, Callback)]()
+  trait MockCrawler extends AsyncHttpClientCrawler {
+    var requests = Vector[(HttpRequest, Callback)]()
 
-    type HttpRequest = MockRequest
-
-    case class MockRequest(url: URL)
-
-    def invoke(r: HttpRequest, h: Callback) {
+    override def invoke(r: HttpRequest, h: Callback) {
       requests = requests :+ ((r,h))
     }
-
-    def get(url: URL) = MockRequest(url)
 
   }
 
   val akkaCrawler = new AkkaCrawler with MockCrawler with AkkaCrawlerConfig
-  def mockUrl = new URL("http://localhost/")
-  def mockUrls: Set[URL] = Set(mockUrl, new URL("http://somethingelse.com/"))
-  def callback = new akkaCrawler.AkkaCrawlerCallback(testActor, mockUrl)
+  def mockUrl = new URL("http://localhost")
+  def mockUrls: Set[URL] = Set(mockUrl, new URL("http://somethingelse.com"))
+  def callback = new AkkaCrawlerCallback(testActor, mockUrl)
 
   "processUrls" should {
     "invoke proper requests" in {
       akkaCrawler.processUrls(mockUrls, testActor)
       akkaCrawler.requests.length should equal (2)
-      val handlers = akkaCrawler.requests.map(_._2).toSet
+      val handlers = akkaCrawler.requests.map(_._2).map(_.asInstanceOf[AkkaCrawlerCallback]).toSet
       val callbacks = handlers.map(_.callback)
       callbacks.size should equal (1)
       callbacks.head should equal (testActor)
-      handlers.map(_.url) should equal(mockUrls)
-      akkaCrawler.requests.map(_._1.url).toSet should equal (mockUrls)
+      val urls = handlers.map(_.url)
+      urls should equal(mockUrls)
+      akkaCrawler.requests.map(_._1.getUrl).toSet should equal (mockUrls.map(_.toString))
     }
   }
 
