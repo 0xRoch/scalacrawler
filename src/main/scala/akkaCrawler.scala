@@ -4,14 +4,16 @@ import akka.actor._
 import com.ning.http.client._
 import java.net.URL
 
-trait AkkaCrawler { this: Crawler =>
+trait AkkaCrawler extends AsyncCrawler{
+
+  type Callback = AkkaCrawlerCallback
 
   def httpClient: AsyncHttpClient
   def as: ActorSystem
 
   def processUrls(urls: Iterable[URL], callbackActor: ActorRef) = {
     urls foreach { url =>
-      invoke(simpleGet(url), new AkkaCrawlerCallback(callbackActor, url))
+      invoke(get(url), new AkkaCrawlerCallback(callbackActor, url))
     }
   }
 

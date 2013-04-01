@@ -8,40 +8,28 @@ import java.util.concurrent.{ Future => JFuture }
 import com.ning.http.client._
 import java.net.URL
 
-trait Crawler {
+trait AsyncCrawler {
 
-  import HttpReader._
+  type HttpRequest
+  type Callback
 
-  def invoke(request: Request, callback: AsyncHandler[Response]): Http[Unit] =
-    Http( _.executeRequest(request, callback) )
 
-  def simpleGet(url: URL): Request =
+  def invoke(request: HttpRequest, callback: Callback)
+  def get(url: URL): HttpRequest
+
+}
+
+trait  AsyncHttpClientCrawler extends AsyncCrawler {
+  type HttpRequest = Request
+  type Callback = AsyncHandler[Response]
+
+  def client: AsyncHttpClient
+
+  def invoke(request: Request, callback: Callback) {
+    client.executeRequest(request, callback)
+  }
+
+  def get(url: URL): HttpRequest =
     new RequestBuilder().setUrl(url.toString).setFollowRedirects(true).build
 
-}
-
-
-object HttpReader extends ReaderI[AsyncHttpClient] {
-  type Http[A] = SpecificReader[A]
-  def Http[A]: (AsyncHttpClient => A)=> Http[A] = reader _
-}
-
-trait ReaderI[R]  {
-  type SpecificReader[A] = Reader[R, A]
-
-  implicit def reader[A](f: R => A): SpecificReader[A] =
-    Reader(f)
-
-  def pure[A](a: A): SpecificReader[A] =
-    (r:R) => a
-}
-
-case class Reader[R, A](f: R => A) {
-  def apply(r: R) = f(r)
-
-  def map[B](g: A => B): Reader[R, B] =
-    Reader(r => g(f(r)) )
-
-  def flatMap[B](g: A => Reader[R, B]): Reader[R, B] =
-    Reader(r => g(f(r))(r))
 }
