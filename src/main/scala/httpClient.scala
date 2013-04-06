@@ -58,9 +58,9 @@ trait NingAsyncHttpClient extends AsyncHttpClient {
       handler.onComplete(new NingHttpResponse(response))
       response
     }
-
     override def onThrowable(t: Throwable) { handler.onFailure(Failure(uri, t)) }
   }
+
   type HttpResponse = NingHttpResponse
   class NingHttpResponse(val response: Response) extends HttpResponseApi {
     def uri = response.getUri
