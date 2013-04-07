@@ -1,6 +1,7 @@
 package scalacrawler
 
 import akka.actor._
+import akka.testkit.TestKit
 
 trait AkkaAsyncHttpClient extends AsyncHttpClient {
 
