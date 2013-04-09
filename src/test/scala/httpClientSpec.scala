@@ -13,11 +13,24 @@ class NingAsyncHttpClientSpec extends WordSpec
     val httpClient = new NingHttpClient()
   }
   object MockedNing extends NingAsyncHttpClient {
-    val httpClient = mock[NingHttpClient]
+    type ResponseHandler = MockResponseHandler
+    case class MockResponseHandler() extends ResponseHandlerApi {
+      def onComplete(x: HttpResponse) = ???
+      def onFailure(f: Failure) = ???
+    }
+
+    val httpClient = new NingHttpClient {
+      var req: Request = _
+      var handler: AsyncHandler[Response] = _
+      override def executeRequest[A](r: Request, h: AsyncHandler[A]) = {
+        req = r
+        handler = h.asInstanceOf[AsyncHandler[Response]]
+        null
+      }
+    }
   }
 
   val uri = new URI("http://example.org")
-
 
   "defaultGet" should {
     "return request with proper uri" in {
@@ -28,7 +41,13 @@ class NingAsyncHttpClientSpec extends WordSpec
 
   "execute" should {
     "call inner execute with proper arguments" in {
-//      val req = MockedNing.defaultGet(uri)
+      val r = MockedNing.defaultGet(uri)
+      val x = MockedNing.MockResponseHandler()
+      MockedNing.execute(r, x)
+      println(r.getClass)
+      MockedNing.httpClient.req should equal (r.ningRequest)
+      MockedNing.httpClient.handler.
+        asInstanceOf[MockedNing.NingResponseHandler].handler should equal(x)
     }
   }
 
