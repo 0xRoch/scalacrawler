@@ -11,6 +11,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.1.2",
   "com.typesafe.akka" %% "akka-testkit" % "2.1.2",
   "com.ning" % "async-http-client" % "1.7.12",
+  "io.spray" %  "spray-json_2.10" % "1.2.3",
   "org.scalatest" %% "scalatest" % "1.9.1" % "test",
   "org.scalamock" %% "scalamock-scalatest-support" % "3.0.1" % "test",
   "org.mockito" % "mockito-all" % "1.9.5" % "test")
